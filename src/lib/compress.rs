@@ -1,10 +1,13 @@
 use std::collections::HashMap;
 
-pub fn compress(uncompressed: &str) -> Result<Vec<u32>, String> {
-    let mut dict_size: u32 = 256;
+pub fn compress(uncompressed: &str, dict_size: &u32) -> Result<Vec<u32>, String> {
+    let mut dict_size: u32 = *dict_size;
     let mut dictionary = HashMap::new();
     for i in 0..dict_size {
-        let c = char::from_u32(i).unwrap();
+        let c = match char::from_u32(i) {
+            Some(value) => value,
+            None => return Err(format!("Dictionary size '{}' is too large.", dict_size))
+        };
         dictionary.insert(c.to_string(), i);
     }
     let mut result: Vec<u32> = Vec::new();
