@@ -1,32 +1,48 @@
-mod lib;
-
-use crate::lib::compress;
 use std::process::exit;
+
+use crate::lib::args;
+use crate::lib::args::Operation;
+use crate::lib::compress;
 use crate::lib::decompress;
 
+mod lib;
+
 fn main() {
-    let dict_size = 256;
-    let test_str = "TOBEORNOTTOBEORTOBEORNOT";
-    // let test_str = "नमस्ते। मैं सेवर्न हूँ। मैं अमेरिका से हूँ।";
-    let test_comp = match compress::compress(test_str, &dict_size) {
-        Ok(comp) => comp,
+    let args = match args::parse_args() {
+        Ok(a) => a,
         Err(reason) => {
-            eprintln!("Unable to compress target. Reason: {}", reason);
+            eprintln!("Error while parsing command args: {}", reason);
             exit(1);
         }
     };
-    println!("Compression Results: {} compressed to {}", test_str.len(), test_comp.len());
-    println!("Compressed Contents:");
-    for i in &test_comp {
-        print!("{} ", *i);
-    }
-    println!();
-    let test_decomp = match decompress::decompress(&test_comp, &dict_size) {
-        Ok(decomp) => decomp,
-        Err(reason) => {
-            eprintln!("Unable to decompress target. Reason: {}", reason);
-            exit(1);
+    let _output_file = match args.operation {
+        Operation::COMPRESS => {
+            match compress::compress(
+                &args.file,
+                &args.output,
+                &args.dict_size,
+                &args.is_verbose,
+            ) {
+                Ok(file) => file,
+                Err(reason) => {
+                    eprintln!("Unable to compress target: {}", reason);
+                    exit(1);
+                }
+            }
+        }
+        Operation::DECOMPRESS => {
+            match decompress::decompress(
+                &args.file,
+                &args.output,
+                &args.dict_size,
+                &args.is_verbose,
+            ) {
+                Ok(file) => file,
+                Err(reason) => {
+                    eprintln!("Unable to decompress target: {}", reason);
+                    exit(1);
+                }
+            }
         }
     };
-    println!("Decompressed Contents: {}", test_decomp);
 }
